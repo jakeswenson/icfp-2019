@@ -1,3 +1,5 @@
+package icfp2019
+
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -41,7 +43,7 @@ data class Problem(val problemId: ProblemId, val startingPosition: Point, val ma
 Task:
  1. Open Zip file
  2. parse a problem at a time: prob_NNN.desc
- 3. solve problem
+ 3. icfp2019.solve problem
  4. encode solution
  5. output to file prob_NNN.sol (use checker to validate?) https://icfpcontest2019.github.io/solution_checker/
  6. add solution to another zip (script/program)
