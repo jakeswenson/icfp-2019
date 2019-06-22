@@ -18,8 +18,6 @@ class Cell {
         val BOOST_TELEPORT: Short = 64 // This cell contains an unclaimed teleport boost
         val BOOST_CLONE: Short = 128 // This cell contains a clone boost
 
-        val NOT_A_CELL: Short = 16384 // A short with this value is considered an invalid cell.
-
         fun setFlag(value: Short, flag: Short): Short {
             return value xor flag
         }
@@ -33,10 +31,6 @@ class Cell {
         }
 
         fun hasFlag(value: Short, flag: Short): Boolean {
-            // Check for bogus cell
-            val invalidCell: Short = value and NOT_A_CELL
-            if (invalidCell > 0) return false
-
             // an Undefined flag is a special case.
             if (value == ZERO || (value > ZERO && flag == ZERO)) return false
 

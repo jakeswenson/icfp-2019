@@ -38,14 +38,14 @@ data class GameBoard(
 
     fun get(x: Int, y: Int): Short {
         if (!isInBoard(x, y)) {
-            return Cell.NOT_A_CELL
+            throw ArrayIndexOutOfBoundsException("Access out of game board")
         }
         return cells[x * height + y]
     }
 
     fun set(x: Int, y: Int, value: Short): GameBoard {
         if (!isInBoard(y, y)) {
-            return this
+            throw ArrayIndexOutOfBoundsException("Access out of game board")
         }
         val newCells = cells.clone()
         newCells[x * height + y] = value
