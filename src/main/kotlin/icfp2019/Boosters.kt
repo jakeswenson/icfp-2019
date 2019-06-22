@@ -12,12 +12,12 @@ sealed class Booster {
             else -> throw IllegalArgumentException("Unknown booster code: '$code'")
         }
     }
+
+    object ExtraArm : Booster()
+    object FastWheels : Booster()
+    object Drill : Booster()
+    object Teleporter : Booster()
+
+    object CloningLocation : Booster()
+    object CloneToken : Booster()
 }
-
-object ExtraArm : Booster()
-object FastWheels : Booster()
-object Drill : Booster()
-object Teleporter : Booster()
-
-object CloningLocation : Booster()
-object CloneToken : Booster()

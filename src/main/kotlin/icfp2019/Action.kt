@@ -16,6 +16,14 @@ sealed class Action {
         is AttachManipulator -> "A(${this.point.x}, ${this.point.y})"
         is TeleportBack -> "T(${this.targetResetPoint.x},${this.targetResetPoint.x})"
     }
+
+    fun invert(): Action? = when (this) {
+        MoveRight -> MoveLeft
+        MoveLeft -> MoveRight
+        MoveDown -> MoveUp
+        MoveUp -> MoveDown
+        else -> null
+    }
 }
 
 object MoveUp : Action()
