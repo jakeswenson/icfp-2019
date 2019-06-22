@@ -5,7 +5,7 @@ import com.google.common.base.Splitter
 import com.google.common.collect.Range
 import com.google.common.collect.TreeRangeSet
 
-val matcher = CharMatcher.anyOf("()")
+val matcher = CharMatcher.anyOf("()")!!
 
 fun parsePoint(mapEdges: String): Point {
     return parseEdges(mapEdges)[0]
@@ -18,7 +18,7 @@ fun parseEdges(mapEdges: String): List<Point> {
         .map { Point(Integer.parseInt(it[0]), Integer.parseInt(it[1])) }
 }
 
-fun parseDesc(problem: ProblemDescription): Problem {
+fun parseDesc(problem: ProblemParseInput): Problem {
 
     val (mapEdges, startPosition, obstacles, boosters) = problem.line.split('#')
     val startPoint = parsePoint(startPosition)
@@ -88,11 +88,11 @@ fun parseDesc(problem: ProblemDescription): Problem {
     return Problem(problem.problemId, Size(maxX, maxY), startPoint, grid)
 }
 
-fun parseBoosters(boosters: String): List<Pair<Boosters, Point>> {
+fun parseBoosters(boosters: String): List<Pair<Booster, Point>> {
     return Splitter.on(';')
         .omitEmptyStrings()
         .split(boosters)
         .map {
-            Boosters.valueOf(it[0].toString()) to parsePoint(it.substring(1))
+            Booster.fromString(it[0]) to parsePoint(it.substring(1))
         }
 }
