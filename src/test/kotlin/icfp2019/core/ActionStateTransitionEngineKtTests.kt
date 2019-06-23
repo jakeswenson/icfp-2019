@@ -81,7 +81,7 @@ internal class ActionStateTransitionEngineKtTests {
             Assertions.assertEquals(0, boostersAvailable(Booster.ExtraArm))
             val robot = robot(RobotId.first)
             Assertions.assertEquals(
-                listOf(Point(1, 1), Point(1, 0), Point(1, -1), Point(2, 0)),
+                listOf(Point(1, 0), Point(1, 1), Point(1, -1), Point(2, 0)),
                 robot.armRelativePoints
             )
         }
