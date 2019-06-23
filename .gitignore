@@ -1,4 +1,4 @@
-.DSStore
+.DS_Store
 
 # Idea files
 *.iml
@@ -10,3 +10,4 @@ out/
 # vim
 .*.sw?
 problems/*.sol
+problems/*.log
