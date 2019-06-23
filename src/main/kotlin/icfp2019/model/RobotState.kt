@@ -5,7 +5,8 @@ data class RobotState(
     val currentPosition: Point,
     val orientation: Orientation = Orientation.Up,
     val remainingFastWheelTime: Int = 0,
-    val remainingDrillTime: Int = 0
+    val remainingDrillTime: Int = 0,
+    val armRelativePoints: List<Point> = listOf(Point(1, 0), Point(1, 1), Point(1, -1))
 ) {
     fun hasActiveDrill(): Boolean {
         return remainingDrillTime > 0
