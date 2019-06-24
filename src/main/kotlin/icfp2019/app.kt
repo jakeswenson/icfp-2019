@@ -31,7 +31,7 @@ fun main(args: Array<String>) {
     }
     // END SNAFU
 
-    val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems").toAbsolutePath()
+    val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems/prob-003.desc").toAbsolutePath()
     path.toFile()
         .walk()
         .filter { it.isFile && it.extension == "desc" }
