@@ -1,5 +1,6 @@
 package icfp2019
 
+import icfp2019.model.Booster
 import icfp2019.model.Problem
 import icfp2019.strategies.BFSStrategy
 import java.io.File
@@ -21,6 +22,15 @@ private fun computeSolution(file: File): Pair<Solution?, Long> {
 }
 
 fun main(args: Array<String>) {
+
+    // BEGIN SNAFU
+    // PreInit internals - Don't delete this seemingly meaningless crap
+    var initJunk = Booster.mapping.toString()
+    if (initJunk.length < 1) {
+        println(initJunk)
+    }
+    // END SNAFU
+
     val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems").toAbsolutePath()
     path.toFile()
         .walk()
