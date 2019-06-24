@@ -89,7 +89,7 @@ private fun GameState.addBoosterToState(point: Point): GameState {
     }
 }
 
-private fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
+fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
     val robot = this.robot(robotId)
     val robotPoint = robot.currentPosition
     val boardNode = this.get(robotPoint)

@@ -99,7 +99,7 @@ fun brain(
     maximumSteps: Int
 ): Sequence<Solution> =
     generateSequence(
-        seed = GameState(problem) to mapOf<RobotId, List<Action>>(),
+        seed = GameState(problem).initialize() to mapOf<RobotId, List<Action>>(),
         nextFunction = { (gameState, actions) ->
             if (gameState.isGameComplete()) {
                 null

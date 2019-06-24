@@ -15,7 +15,7 @@ internal class ActionStateTransitionEngineKtTests {
                         @.
                     """.toProblem()
         val startingPosition = problem.startingPosition
-        val startingState = GameState(problem)
+        val startingState = GameState(problem).initialize()
         val upRightState = applyAction(startingState, RobotId.first, Action.MoveUp).let {
             applyAction(it, RobotId.first, Action.MoveRight)
         }
@@ -39,7 +39,7 @@ internal class ActionStateTransitionEngineKtTests {
     fun verifyPickupBooster() {
 
         val problem = "l@".toProblem()
-        val gameState = GameState(problem)
+        val gameState = GameState(problem).initialize()
 
         Assertions.assertEquals(
             BoardNodeState(Point.origin(), isWrapped = false, booster = Booster.Drill),
@@ -59,7 +59,7 @@ internal class ActionStateTransitionEngineKtTests {
     fun verifyArmsAttach() {
 
         val problem = "b@".toProblem()
-        val gameState = GameState(problem)
+        val gameState = GameState(problem).initialize()
 
         Assertions.assertEquals(
             BoardNodeState(Point.origin(), booster = Booster.ExtraArm),
@@ -95,7 +95,7 @@ internal class ActionStateTransitionEngineKtTests {
         f....
         @..XX
     """.toProblem()
-        val gameState = GameState(problem)
+        val gameState = GameState(problem).initialize()
 
         val actions = listOf(
             Action.MoveUp, Action.AttachFastWheels, Action.MoveRight, Action.MoveRight
@@ -121,7 +121,7 @@ internal class ActionStateTransitionEngineKtTests {
         @lX..
         ..X..
     """.toProblem()
-        val gameState = GameState(problem)
+        val gameState = GameState(problem).initialize()
 
         val actions = listOf(
             Action.MoveRight, Action.StartDrill, Action.MoveRight, Action.MoveRight, Action.MoveRight

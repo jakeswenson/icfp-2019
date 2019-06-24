@@ -11,7 +11,7 @@ import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleGraph
 
 object BoardCellsGraphAnalyzer : Analyzer<Graph<BoardCell, DefaultEdge>> {
-    private val cache = Cache.forBoard { initialState ->
+    internal val cache = Cache.forBoard { initialState ->
         val simpleGraph = SimpleGraph<BoardCell, DefaultEdge>(DefaultEdge::class.java)
         val allCells = initialState.allCells().filter { !it.isObstacle }.toList()
 

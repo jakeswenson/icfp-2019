@@ -1,9 +1,6 @@
 package icfp2019.model
 
-import icfp2019.core.MapCells
-import icfp2019.core.get
-import icfp2019.core.rebuild
-import icfp2019.core.update
+import icfp2019.core.*
 import org.pcollections.PVector
 
 typealias BoardCells = PVector<PVector<BoardCell>>
@@ -43,13 +40,13 @@ data class GameState private constructor(
     val mapSize: MapSize,
     val startingPoint: Point,
     private val robotStates: Map<RobotId, RobotState> = initialRobotMap(startingPoint),
-    val teleportDestination: List<Point> = listOf(),
-    val unusedBoosters: Map<Booster, Int> = mapOf()
+    val teleportDestination: List<Point> = emptyList(),
+    val unusedBoosters: Map<Booster, Int> = emptyMap()
 ) {
 
     constructor(problem: Problem) : this(
         initBoardNodes(problem.map),
-        initBoardNodeState(problem.map, problem.startingPosition),
+        initBoardNodeState(problem),
         problem.size,
         problem.startingPosition
     )
@@ -61,11 +58,15 @@ data class GameState private constructor(
             return mapCells.rebuild { BoardCell(it) }
         }
 
-        private fun initBoardNodeState(mapCells: MapCells, start: Point): BoardNodeStates {
-            return mapCells.rebuild {
+        private fun initBoardNodeState(problem: Problem): BoardNodeStates {
+            return problem.map.rebuild {
                 BoardNodeState(it)
-            }.update(start) { copy(isWrapped = true) }
+            }
         }
+    }
+
+    fun initialize(): GameState {
+        return this.wrapAffectedCells(RobotId.first)
     }
 
     fun board(): BoardCells = board
