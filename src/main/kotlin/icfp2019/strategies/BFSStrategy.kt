@@ -10,6 +10,11 @@ import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.traverse.BreadthFirstIterator
 import org.jgrapht.traverse.GraphIterator
 
+fun <T> Sequence<T>.sample(count: Int): Sequence<T> = toMutableList()
+    .shuffled()
+    .take(count)
+    .asSequence()
+
 object BFSStrategy : Strategy {
     override fun compute(initialState: GameState): (robotId: RobotId, state: GameState) -> Action {
         val graphBuilder = BoardCellsGraphAnalyzer.analyze(initialState)
@@ -46,8 +51,10 @@ object BFSStrategy : Strategy {
                     val shortestPathAlgorithm = analyze(robotId, gameState)
 
                     val pathToClosestNode: GraphPath<BoardCell, DefaultEdge> = unwrappedGraph.vertexSet()
+                        .asSequence()
                         .filter { it.point != currentNode.point }
                         .filter { it.point in unWrappedPoints }
+                        .sample(50)
                         .map { shortestPathAlgorithm.getPath(gameState.get(currentPoint), it) }
                         .minBy { it.length }!!
 
