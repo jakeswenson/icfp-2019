@@ -1,6 +1,5 @@
 package icfp2019
 
-import icfp2019.analyzers.ConservativeDistanceAnalyzer
 import icfp2019.core.DistanceEstimate
 import icfp2019.core.Strategy
 import icfp2019.core.applyAction
@@ -41,22 +40,19 @@ fun Sequence<Pair<GameState, Action>>.score(
     strategy: Strategy
 ): BrainScore {
     // grab the first and last game state in this simulation path
-    val (initial, final) = map { it to it.first }
+    val (initial) = map { it to it.first }
         .reduce { (initial, _), (_, final) -> initial to final }
-
-    // from the final position we will estimate the number of
-    // steps required to completely wrap the remainder of the mine
-    val point = final.robot(robotId).currentPosition
-    val gameState = initial.first
-    val conservativeDistance = ConservativeDistanceAnalyzer.analyze(gameState)(robotId, final)(point)
 
     // return the initial game state, if this path is the winner
     // we can use this to avoid duplicate action evaluation
+
+    // DISABLE THIS
+
     return BrainScore(
         robotId,
         initial.first,
         initial.second,
-        conservativeDistance.estimate,
+        DistanceEstimate(0),
         strategy
     )
 }
