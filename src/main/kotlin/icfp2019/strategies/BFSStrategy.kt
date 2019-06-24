@@ -16,8 +16,8 @@ object BFSStrategy : Strategy {
         return { robotId, gameState ->
             if (gameState.boostersAvailable(Booster.ExtraArm) > 0) {
                 Action.AttachManipulator(gameState.robot(robotId).optimumManipulatorArmTarget())
-            } else if (gameState.boostersAvailable(Booster.FastWheels) > 0) {
-                Action.AttachFastWheels
+            // } else if (gameState.boostersAvailable(Booster.FastWheels) > 0) {
+            //    Action.AttachFastWheels
             } else {
                 val unWrappedPoints = gameState.boardState().allStates().filter { !it.isWrapped }.map { it.point }
                 val graph = graphBuilder.invoke(robotId, gameState)
