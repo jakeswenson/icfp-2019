@@ -66,6 +66,6 @@ class OutputTests {
         )
 
         val actualOutput = map.encodeActions()
-        Assertions.assertEquals("SSAWWDA(1,2)#SSAWWDA(1,2)", actualOutput)
+        Assertions.assertEquals("SSAWWDB(1,2)#SSAWWDB(1,2)", actualOutput)
     }
 }
