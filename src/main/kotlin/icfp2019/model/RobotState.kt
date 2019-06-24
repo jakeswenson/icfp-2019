@@ -26,11 +26,11 @@ data class RobotState(
     }
 
     fun hasActiveDrill(): Boolean {
-        return remainingDrillTime > 0
+        return remainingDrillTime > 1
     }
 
     fun hasActiveFastWheels(): Boolean {
-        return remainingFastWheelTime > 0
+        return remainingFastWheelTime > 1
     }
 
     fun turnClockwise(): List<Point> {
