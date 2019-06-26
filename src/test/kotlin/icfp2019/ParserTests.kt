@@ -79,7 +79,7 @@ class ParserTests {
 
     @Test
     fun printProblem() {
-        val problemInput = loadProblem(86)
+        val problemInput = loadProblem(150)
         printBoard(parseDesc(problemInput, "Test"))
     }
 
@@ -142,5 +142,11 @@ class ParserTests {
             ParsedBooster(Booster.ExtraArm, Point(4, 31))
         )
         Assertions.assertEquals(actual, expected)
+    }
+
+    @Test
+    fun map221() {
+        val problem = parseDesc(loadProblem(221), "221")
+        printBoard(problem)
     }
 }

@@ -1,7 +1,6 @@
 package icfp2019
 
 import icfp2019.model.Booster
-import icfp2019.model.Problem
 import icfp2019.strategies.BFSStrategy
 import java.io.File
 import java.nio.file.Paths
@@ -22,16 +21,16 @@ private fun computeSolution(file: File): Pair<Solution?, Long> {
 }
 
 fun main(args: Array<String>) {
-
     // BEGIN SNAFU
     // PreInit internals - Don't delete this seemingly meaningless crap
     var initJunk = Booster.mapping.toString()
-    if (initJunk.length < 1) {
-        println(initJunk)
+    if (initJunk.isEmpty()) {
+        println(initJunk.subSequence(0, 0))
     }
     // END SNAFU
 
-    val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems/prob-003.desc").toAbsolutePath()
+    val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems").toAbsolutePath()
+
     path.toFile()
         .walk()
         .filter { it.isFile && it.extension == "desc" }
@@ -50,8 +49,4 @@ fun main(args: Array<String>) {
             print(logSummary)
             File(it.parent, "${it.nameWithoutExtension}.log").appendText(logSummary)
         }
-}
-
-fun constructObstacleMap(problem: Problem): Array<Array<Boolean>> {
-    return problem.map.map { it.map { it.isObstacle }.toTypedArray() }.toTypedArray()
 }

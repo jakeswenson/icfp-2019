@@ -48,10 +48,10 @@ fun boardString(cells: List<List<Node>>, size: MapSize, startingPosition: Point,
             val node = cells[x][y]
             when {
                 node.hasTeleporterPlanted -> '*'
+                node.point in path -> '|'
                 node.isWrapped -> 'w'
                 startingPosition == Point(x, y) -> '@'
                 node.isObstacle -> 'X'
-                node.point in path -> '|'
                 node.booster != null -> 'o'
                 else -> '.'
             }

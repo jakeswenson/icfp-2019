@@ -9,6 +9,7 @@ out/
 
 # vim
 .*.sw?
-problems/*.sol
-problems/*.sol-partial
-problems/*.log
+*.sol
+*.sol-partial
+*.log
+!examples/

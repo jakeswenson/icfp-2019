@@ -31,8 +31,9 @@ data class BoardNodeState(
     }
 }
 
-fun BoardCells.allCells(): Sequence<BoardCell> = this.flatten().asSequence().map { it!! }
-fun BoardNodeStates.allStates(): Sequence<BoardNodeState> = this.flatten().asSequence().map { it!! }
+fun BoardCells.allCells(): Sequence<BoardCell> = this.asSequence().flatten().map { it!! }
+fun BoardNodeStates.allStates(): Sequence<BoardNodeState> = this.asSequence().flatten().map { it!! }
+fun BoardNodeStates.unwrappedNodeStates(): Sequence<BoardNodeState> = allStates().filter { !it.isWrapped }
 
 data class GameState private constructor(
     private val board: BoardCells,
@@ -94,6 +95,10 @@ data class GameState private constructor(
         return (point.x in 0 until mapSize.x && point.y in 0 until mapSize.y)
     }
 
+    fun backpackContains(booster: Booster): Boolean {
+        return unusedBoosters.getOrDefault(booster, 0) > 0
+    }
+
     fun updateBoard(point: Point, value: BoardCell): GameState {
         if (!isInBoard(point)) {
             throw ArrayIndexOutOfBoundsException("Access out of game board")
@@ -110,9 +115,9 @@ data class GameState private constructor(
         return copy(boardState = newCells)
     }
 
-    fun withNewRobot(): GameState {
+    fun withNewRobot(currentPosition: Point): GameState {
         val newId = this.allRobotIds.maxBy { it.id }!!.nextId()
-        return withRobotState(newId, RobotState(newId, this.startingPoint))
+        return withRobotState(newId, RobotState(newId, currentPosition))
     }
 
     fun withRobotPosition(robotId: RobotId, point: Point): GameState {
@@ -129,5 +134,9 @@ data class GameState private constructor(
 
     fun boostersAvailable(booster: Booster): Int {
         return this.unusedBoosters.getOrDefault(booster, 0)
+    }
+
+    fun robotIsOn(robotId: RobotId, cloningLocation: Booster.CloningLocation): Boolean {
+        return nodeState(robot(robotId).currentPosition).hasBooster(cloningLocation)
     }
 }

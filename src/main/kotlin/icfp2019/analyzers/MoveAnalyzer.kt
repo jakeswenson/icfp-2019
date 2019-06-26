@@ -20,7 +20,7 @@ object MoveAnalyzer : Analyzer<(RobotId, Action) -> Boolean> {
 
                     fun canMoveTo(point: Point): Boolean {
                         return initialState.isInBoard(point) &&
-                                (!cell.isObstacle || hasBooster(Booster.Drill))
+                                (!cell.isObstacle || robotState.hasActiveDrill())
                     }
 
                     fun canTeleportTo(point: Point): Boolean {

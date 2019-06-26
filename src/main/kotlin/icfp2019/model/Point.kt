@@ -39,8 +39,13 @@ data class Point(val x: Int, val y: Int) {
         return copy(x = x + 1)
     }
 
-    fun neighbors(): List<Point> {
-        return listOf(up(), down(), left(), right())
+    fun neighbors(): Sequence<Point> {
+        return sequence {
+            yield(up())
+            yield(down())
+            yield(left())
+            yield(right())
+        }
     }
 
     fun applyRelativePoint(offset: Point): Point {

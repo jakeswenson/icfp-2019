@@ -24,17 +24,18 @@ class ShortestPathsUsingFloydWarshallTest {
         val graph = ShortestPathUsingFloydWarshall
             .analyze(gameState)(RobotId.first, gameState)
             .getPath(
-                gameState.get(Point.origin()),
-                gameState.get(Point(1, 2))
+                Point.origin(),
+                Point(1, 2)
             )
 
-        Assertions.assertEquals(listOf(
-            Point(0, 0),
-            Point(0, 1),
-            Point(0, 2),
-            Point(1, 2)
-        ),
-            graph.vertexList.map { it.point }
+        Assertions.assertEquals(
+            listOf(
+                Point(0, 0),
+                Point(0, 1),
+                Point(0, 2),
+                Point(1, 2)
+            ),
+            graph.vertexList
         )
     }
 }

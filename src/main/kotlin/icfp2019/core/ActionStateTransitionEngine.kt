@@ -35,7 +35,7 @@ fun applyAction(gameState: GameState, robotId: RobotId, action: Action): GameSta
                 get(currentPosition).copy(hasTeleporterPlanted = true)
             ).useBoosterFromState(Booster.Teleporter)
 
-            Action.CloneRobot -> withNewRobot()
+            Action.CloneRobot -> withNewRobot(currentPosition).useBoosterFromState(Booster.CloneToken)
 
             is Action.TeleportBack -> updateRobot(robotId) {
                 copy(currentPosition = action.targetResetPoint)
@@ -83,6 +83,7 @@ private fun GameState.useBoosterFromState(booster: Booster): GameState {
 private fun GameState.addBoosterToState(point: Point): GameState {
     val node = this.nodeState(point)
     val booster = node.booster ?: return this
+    if (!booster.canPickup()) return this
     // pickup
     return this.updateState(point, node.copy(booster = null)).let {
         it.copy(unusedBoosters = it.unusedBoosters.plus(booster to it.unusedBoosters.getOrDefault(booster, 0) + 1))
@@ -95,7 +96,8 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
     val boardNode = this.get(robotPoint)
 
     val withUpdatedBoardState = if (boardNode.isObstacle)
-        updateBoard(robotPoint, boardNode.copy(isObstacle = false))
+        if (robot.hasActiveDrill()) updateBoard(robotPoint, boardNode.copy(isObstacle = false))
+        else error("No active drill but moving on obstacle")
     else this
 
     val updatedState = withUpdatedBoardState.updateState(robotPoint, this.nodeState(robotPoint).copy(isWrapped = true))

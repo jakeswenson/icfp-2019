@@ -22,6 +22,7 @@ class Cache<T, R>(filler: (T) -> R) {
     }
 
     private val storage = CacheBuilder.newBuilder()
+        .maximumSize(50)
         .build(object : CacheLoader<T, R>() {
             override fun load(key: T): R {
                 return filler(key)

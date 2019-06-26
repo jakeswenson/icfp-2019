@@ -19,6 +19,11 @@ sealed class Booster {
         }
     }
 
+    fun canPickup(): Boolean = when (this) {
+        CloningLocation -> false
+        else -> true
+    }
+
     object ExtraArm : Booster()
     object FastWheels : Booster()
     object Drill : Booster()
