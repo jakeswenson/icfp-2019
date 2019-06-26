@@ -4,6 +4,12 @@ plugins {
     kotlin("jvm") version "1.3.40"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "5.0.0"
+    id("com.gradle.build-scan") version "2.1"
+}
+
+buildScan {
+    termsOfServiceUrl = "https://gradle.com/terms-of-service"
+    termsOfServiceAgree = "yes"
 }
 
 group = "icfp2019"

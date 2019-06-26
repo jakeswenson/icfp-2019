@@ -1,7 +1,7 @@
 language: java
 # from here: https://guides.gradle.org/executing-gradle-builds-on-travisci/
 script:
-- ./gradlew spotlessCheck test -s
+- ./gradlew spotlessCheck test -s --scan
 notifications:
   email: false
 before_cache:
