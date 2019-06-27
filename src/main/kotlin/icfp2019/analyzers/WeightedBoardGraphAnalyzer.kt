@@ -11,12 +11,12 @@ fun <V> byState(boardStates: BoardNodeStates, locationFor: (V) -> Point): Weight
     val n1State = locationFor(n1).lookupIn(boardStates)
     when {
         n1State.isWrapped -> { _ -> 1.5 }
-        n1State.hasBooster -> { _ -> 0.5 }
+        n1State.hasBooster -> { _ -> 0.01 }
         else -> { n2 ->
             val n2State = locationFor(n2).lookupIn(boardStates)
             when {
                 n2State.isWrapped -> 1.5
-                n2State.hasBooster -> 0.5
+                n2State.hasBooster -> 0.01
                 else -> 1.0
             }
         }
