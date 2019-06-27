@@ -1,10 +1,15 @@
 package icfp2019.core
 
+import com.google.common.io.Resources
+import icfp2019.*
 import icfp2019.model.*
-import icfp2019.printBoard
-import icfp2019.toProblem
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
+import kotlin.streams.asStream
 
 internal class ActionStateTransitionEngineKtTests {
 
@@ -106,13 +111,9 @@ internal class ActionStateTransitionEngineKtTests {
         wwwXX
     """.toProblem()
 
-        actions.applyTo(gameState).let { state ->
-            printBoard(state)
-            Assertions.assertEquals(expectedProblem.map, state.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
-    // THIS IS BROKEN
     @Test
     fun verifyDrill() {
 
@@ -127,15 +128,12 @@ internal class ActionStateTransitionEngineKtTests {
             Action.MoveRight, Action.StartDrill, Action.MoveRight, Action.MoveRight, Action.MoveRight
         )
         val expectedProblem = """
-        ..X..
-        wwX..
-        ..X..
+        .wXww
+        wwwww
+        .wXww
     """.toProblem()
 
-        actions.applyTo(gameState).let { state ->
-            printBoard(state)
-            Assertions.assertEquals(expectedProblem.map, state.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     @Test
@@ -158,12 +156,11 @@ internal class ActionStateTransitionEngineKtTests {
         val expectedProblem = """
         wwww*
         wwwww
-        wwwww
+        @wwww
     """.toProblem()
 
         actions.applyTo(gameState).let { state ->
-            printBoard(state)
-            Assertions.assertEquals(expectedProblem.map, state.toProblem().map)
+            state.assertEquals(expectedProblem)
         }
     }
 
@@ -186,657 +183,81 @@ internal class ActionStateTransitionEngineKtTests {
         val expectedProblem = """
         wwwXX
         wwww.
-        wwwXX
+        @wwXX
     """.toProblem()
 
         actions.applyTo(gameState).let {
-            printBoard(gameState)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
+            it.assertEquals(expectedProblem)
         }
     }
 
-    @Test
-    fun verifyLongArm() {
+    companion object {
+        @JvmStatic
+        @Suppress("unused", "UnstableApiUsage")
+        fun longArmsUpSource(): Stream<Arguments> {
 
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+            return sequence {
+                val problems = Resources.getResource(
+                    ActionStateTransitionEngineKtTests::class.java,
+                    "longArmsUp.problems"
+                ).readText().toMultipleProblemsAndExpectations()
 
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        www..
-    """.toProblem()
+                yieldAll(problems.map { (problem, expectation) ->
+                    Arguments.of(
+                        makeLongArmedRobot(problem),
+                        expectation
+                    )
+                })
+            }.asStream()
+        }
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
+        @JvmStatic
+        @Suppress("unused", "UnstableApiUsage")
+        fun longArmsDownSource(): Stream<Arguments> {
+
+            return sequence {
+                val problems = Resources.getResource(
+                    ActionStateTransitionEngineKtTests::class.java,
+                    "longArmsDown.problems"
+                ).readText().toMultipleProblemsAndExpectations()
+
+                yieldAll(problems.map { (problem, expectation) ->
+                    Arguments.of(
+                        makeLongArmedRobot(problem, down = true),
+                        expectation
+                    )
+                })
+            }.asStream()
+        }
+
+        private fun makeLongArmedRobot(problem: Problem, down: Boolean = false): GameState {
+            val originalGameState = GameState(problem)
+            val originalRobotState = originalGameState.robot(RobotId.first)
+            val newRobotState = originalRobotState.copy(
+                armRelativePoints = originalRobotState.armRelativePoints.plus(
+                    (2..10).map { Point(1, if (down) -it else it) }
+                )
+            )
+            return originalGameState.withRobotState(RobotId.first, newRobotState).initialize()
+        }
+
+        private fun makeRobotWithBalancedArms(problem: Problem): GameState {
+            val originalGameState = GameState(problem)
+            val originalRobotState = originalGameState.robot(RobotId.first)
+            val newRobotState = originalRobotState.copy(
+                armRelativePoints = originalRobotState.armRelativePoints.plus(
+                    (2..5).flatMap { listOf(Point(1, it), Point(1, -it)) }
+                )
+            )
+            val gameState = originalGameState.withRobotState(RobotId.first, newRobotState).initialize()
+            return gameState
         }
     }
 
-    @Test
-    fun verifyLongArm1() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .Xw..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArm2() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        ..w..
-        .Xw..
-        ..w..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArm3() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArm4() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        .....
-        .....
-        .....
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArm5() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArm6() {
-
-        val problem = """
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        @....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        www..
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom() {
-
-        val problem = """
-        @....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom1() {
-
-        val problem = """
-        @....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        .Xw..
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom2() {
-
-        val problem = """
-        @....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        .Xw..
-        ..w..
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom3() {
-
-        val problem = """
-        @....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom4() {
-
-        val problem = """
-        @....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom5() {
-
-        val problem = """
-        @....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .....
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
-    }
-
-    @Test
-    fun verifyLongArmBottom6() {
-
-        val problem = """
-        @....
-        .....
-        .....
-        .....
-        .....
-        .....
-        .X...
-        .....
-        .....
-        .....
-        .....
-        .....
-    """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, -3), Point(1, -4), Point(1, -5), Point(1, -6), Point(1, -7), Point(1, -8), Point(1, -9), Point(1, -10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
-
-        val actions = listOf(
-            Action.MoveRight
-        )
-        val expectedProblem = """
-        www..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .Xw..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .....
-    """.toProblem()
-
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+    @ParameterizedTest
+    @MethodSource(value = ["longArmsUpSource", "longArmsDownSource"])
+    fun verifyLongArm(testCase: GameState, expected: Problem) {
+        applyAction(testCase, RobotId.first, Action.MoveRight).assertEquals(expected)
     }
 
     @Test
@@ -857,34 +278,28 @@ internal class ActionStateTransitionEngineKtTests {
         .....
         .....
     """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, 2), Point(1, -3), Point(1, 3), Point(1, -4), Point(1, 4), Point(1, -5), Point(1, 5))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+        val gameState = makeRobotWithBalancedArms(problem)
 
         val actions = listOf(
             Action.MoveRight
         )
         val expectedProblem = """
         .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
         www..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
         .....
     """.toProblem()
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     @Test
@@ -905,34 +320,28 @@ internal class ActionStateTransitionEngineKtTests {
         .....
         .....
     """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, 2), Point(1, -3), Point(1, 3), Point(1, -4), Point(1, 4), Point(1, -5), Point(1, 5))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+        val gameState = makeRobotWithBalancedArms(problem)
 
         val actions = listOf(
             Action.MoveRight
         )
         val expectedProblem = """
         .....
-        .....
+        .w...
         .....
         ..w..
         .Xw..
-        ..w..
+        .ww..
         www..
         .Xw..
         .....
-        .....
-        .....
-        .....
+        .w...
+        .w...
+        .w...
         .....
     """.toProblem()
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     @Test
@@ -952,33 +361,27 @@ internal class ActionStateTransitionEngineKtTests {
         .....
         @....
     """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+        val gameState = makeLongArmedRobot(problem)
 
         val actions = listOf(
             Action.MoveRight
         )
         val expectedProblem = """
         .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .....
-        .....
-        ..X..
-        ..w..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .w...
+        .w...
+        .wX..
+        .ww..
         www..
     """.toProblem()
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     @Test
@@ -998,33 +401,27 @@ internal class ActionStateTransitionEngineKtTests {
         .....
         @....
     """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, 2), Point(1, 3), Point(1, 4), Point(1, 5), Point(1, 6), Point(1, 7), Point(1, 8), Point(1, 9), Point(1, 10))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+        val gameState = makeLongArmedRobot(problem)
 
         val actions = listOf(
             Action.MoveRight
         )
         val expectedProblem = """
         .....
-        ..w..
-        ..w..
-        ..w..
-        ..w..
-        .....
-        .....
-        .....
-        ..X..
-        ..w..
-        ..w..
+        .ww..
+        .ww..
+        .ww..
+        .ww..
+        .w...
+        .w...
+        .w...
+        .wX..
+        .ww..
+        .ww..
         www..
     """.toProblem()
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     @Test
@@ -1045,34 +442,28 @@ internal class ActionStateTransitionEngineKtTests {
         .....
         .....
     """.toProblem()
-        val originalGameState = GameState(problem)
-        val originalRobotState = originalGameState.robot(RobotId.first)
-        val newRobotState = originalRobotState.copy(armRelativePoints = originalRobotState.armRelativePoints.plus(listOf(Point(1, -2), Point(1, 2), Point(1, -3), Point(1, 3), Point(1, -4), Point(1, 4), Point(1, -5), Point(1, 5))))
-        val gameState = originalGameState.withRobotState(RobotId.first, newRobotState)
+        val gameState = makeRobotWithBalancedArms(problem)
 
         val actions = listOf(
             Action.MoveRight
         )
         val expectedProblem = """
         .....
-        ..w..
-        .....
-        .....
-        ..X..
-        ..w..
+        .ww..
+        .w...
+        .w...
+        .wX..
+        .ww..
         www..
-        ..X..
-        .....
-        ..w..
-        ..w..
-        ..w..
+        .wX..
+        .w...
+        .ww..
+        .ww..
+        .ww..
         .....
     """.toProblem()
 
-        actions.applyTo(gameState).let {
-            printBoard(it)
-            Assertions.assertEquals(expectedProblem.map, it.toProblem().map)
-        }
+        actions.applyTo(gameState).assertEquals(expectedProblem)
     }
 
     private fun List<Action>.applyTo(gameState: GameState): GameState {

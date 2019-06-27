@@ -11,14 +11,12 @@ data class Distance(val value: Int) : Comparable<Distance> {
     }
 }
 
-class DistanceToWalls : Analyzer<Distance> {
+object DistanceToWalls : Analyzer<Distance> {
 
     // Given a map, return a map of weights where the weight indicates the distance
     // the square is from the walls. We will sum the distance to close horizontal and vertical walls.
 
-    companion object {
-        val obstacleIdentifier: Distance = Distance(-1)
-    }
+    val obstacleIdentifier: Distance = Distance(-1)
 
     private fun applyDistanceAlgorithm(map: BoardCells): List<List<Distance>> {
         val maxX = map.size

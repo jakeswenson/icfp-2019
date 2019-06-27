@@ -3,12 +3,23 @@ package icfp2019
 import com.google.common.base.CharMatcher
 import com.google.common.base.Splitter
 import icfp2019.model.*
+import org.junit.jupiter.api.Assertions
 import org.pcollections.PVector
 import org.pcollections.TreePVector
 import java.nio.file.Paths
 
 fun String.toProblem(): Problem {
     return parseTestMap(this)
+}
+
+fun String.toMultipleProblems(): List<Problem> {
+    val splitter = Splitter.on(CharMatcher.anyOf("-=")).omitEmptyStrings()
+    return splitter.splitToList(this).map { it.toProblem() }
+}
+
+fun String.toMultipleProblemsAndExpectations(): List<Pair<Problem, Problem>> {
+    return this.toMultipleProblems().windowed(size = 2, step = 2)
+        .map { (problem, expectation) -> problem to expectation }
 }
 
 fun GameState.toProblem(): Problem {
@@ -27,10 +38,12 @@ fun GameState.toProblem(): Problem {
 
     val grid = TreePVector.from<PVector<Node>>(nodes.map { TreePVector.from(it) })
 
-    return Problem(name = "result",
+    return Problem(
+        name = "result",
         size = this.mapSize,
         startingPosition = this.startingPoint,
-        map = grid)
+        map = grid
+    )
 }
 
 fun loadProblem(problemNumber: Int): String {
@@ -44,21 +57,62 @@ fun boardString(problem: Problem, path: Set<Point> = setOf()): String =
 fun boardString(cells: List<List<Node>>, size: MapSize, startingPosition: Point, path: Set<Point> = setOf()): String {
     val lines = mutableListOf<String>()
     for (y in (size.y - 1) downTo 0) {
-        val row = (0 until size.x).map { x ->
-            val node = cells[x][y]
-            when {
-                node.hasTeleporterPlanted -> '*'
-                node.point in path -> '|'
-                node.isWrapped -> 'w'
-                startingPosition == Point(x, y) -> '@'
-                node.isObstacle -> 'X'
-                node.booster != null -> 'o'
-                else -> '.'
-            }
-        }.joinToString(separator = " ")
+        val row = boardRowString(size, cells, y, path, startingPosition)
         lines.add(row)
     }
     return lines.joinToString(separator = "\n")
+}
+
+private fun boardRowString(
+    size: MapSize,
+    cells: List<List<Node>>,
+    y: Int,
+    path: Set<Point>,
+    startingPosition: Point
+): String {
+    return (0 until size.x).map { x ->
+        val node = cells[x][y]
+        when {
+            node.hasTeleporterPlanted -> '*'
+            node.point in path -> '|'
+            node.isWrapped -> 'w'
+            startingPosition == Point(x, y) -> '@'
+            node.isObstacle -> 'X'
+            node.booster != null -> 'o'
+            else -> '.'
+        }
+    }.joinToString(separator = " ")
+}
+
+fun boardComparisonString(
+    size: MapSize,
+    startingPosition: Point,
+    path: Set<Point> = setOf(),
+    left: List<List<Node>>,
+    right: List<List<Node>>
+): String {
+    val lines = mutableListOf<String>()
+    for (y in (size.y - 1) downTo 0) {
+        val leftRow = boardRowString(size, left, y, path, startingPosition)
+        val rightRow = boardRowString(size, right, y, path, startingPosition)
+        lines.add(leftRow.padEnd(size.x * 2 + 5, ' ') + rightRow)
+    }
+    return lines.joinToString(separator = "\n")
+}
+
+fun printBoardComparison(expected: Problem, result: Problem, path: Set<Point> = setOf()) {
+    println("${expected.size}")
+    println("Expected".padEnd(expected.size.x*2 + 5, ' ') + "Result")
+    print(boardComparisonString(expected.size, expected.startingPosition, path, expected.map, result.map))
+    println()
+}
+
+fun GameState.assertEquals(expected: Problem) {
+    val result = this.toProblem()
+    if (expected.map != result.map) {
+        printBoardComparison(expected, result)
+        Assertions.fail<Any>("Boards are not equal")
+    }
 }
 
 fun printBoard(p: Problem, path: Set<Point> = setOf()) {

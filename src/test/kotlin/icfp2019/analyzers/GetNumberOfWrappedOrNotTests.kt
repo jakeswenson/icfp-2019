@@ -12,7 +12,7 @@ class GetNumberOfWrappedOrNotTests {
     fun testSimple() {
 
         val map3x2 = """
-            ...
+            .w.
             ww.
         """.toProblem()
         val gameState = GameState(map3x2).initialize()
@@ -26,6 +26,6 @@ class GetNumberOfWrappedOrNotTests {
 
         val results = GetNumberOfWrappedOrNot.analyze(gameState)(RobotId.first, gameState)
         Assertions.assertEquals(3, results.wrapped) // initial wrap
-        Assertions.assertEquals(4, results.unwrapped)
+        Assertions.assertEquals(3, results.unwrapped)
     }
 }

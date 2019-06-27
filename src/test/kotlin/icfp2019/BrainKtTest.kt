@@ -4,7 +4,6 @@ import icfp2019.core.Strategy
 import icfp2019.model.Action
 import icfp2019.model.GameState
 import icfp2019.model.RobotId
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -29,7 +28,7 @@ internal class BrainKtTest {
         val solution = parseTestMap(fini)
         printBoard(problem)
         val strategy = TestStrategy(Action.MoveDown, Action.MoveRight)
-        var state = GameState(problem)
+        var state = GameState(problem).initialize()
         for (i in 0..1) {
             val (result, actions) = brainStep(
                 state,
@@ -43,7 +42,7 @@ internal class BrainKtTest {
             printBoard(result)
         }
 
-        Assertions.assertEquals(solution.map, state.toProblem().map)
+        state.assertEquals(solution)
     }
 
     private val init =

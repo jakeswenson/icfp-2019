@@ -53,10 +53,11 @@ private fun GameState.move(robotId: RobotId, mover: (Point) -> Point): GameState
 
     val distance = if (robotState.hasActiveFastWheels()) 2 else 1
 
-    val movedState = (0 until distance).fold(this) { state, _ ->
+    val movedState = (0 until distance).fold(this) { state, moveCount ->
         val newPosition = mover(state.robot(robotId).currentPosition)
-        if (!state.isInBoard(newPosition) || state.get(newPosition).isObstacle) {
-            state
+        if (!state.isInBoard(newPosition) || (state.get(newPosition).isObstacle && !robotState.hasActiveDrill())) {
+            if (moveCount == 1) state
+            else error("Robot is trying to move into a wall")
         } else {
             state.updateRobot(robotId) { copy(currentPosition = newPosition) }
                 .wrapAffectedCells(robotId)
@@ -109,6 +110,7 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
             .map { it.first to updatedState.get(it.second).isObstacle }
             .filter { it.second }
     }
+
     val closestWallOnRobotPathUp = computeClosestWallOnRobotPath(1 until 9)
     val closestWallOnRobotPathDown = computeClosestWallOnRobotPath(-1 downTo -9)
 
@@ -177,7 +179,10 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
 
     return robot.armRelativePoints.fold(updatedState, { state, armRelativePoint ->
         val armWorldPoint = robotPoint.applyRelativePoint(armRelativePoint)
-        if (state.isInBoard(armWorldPoint) && isArmPointVisible(armRelativePoint) && isArmPointVisibleDueToArmPathWall(armRelativePoint) && state.get(armWorldPoint).isObstacle.not()) {
+        if (state.isInBoard(armWorldPoint) && isArmPointVisible(armRelativePoint) && isArmPointVisibleDueToArmPathWall(
+                armRelativePoint
+            ) && state.get(armWorldPoint).isObstacle.not()
+        ) {
             val boardState = state.nodeState(armWorldPoint)
             state.updateState(armWorldPoint, boardState.copy(isWrapped = true))
         } else {

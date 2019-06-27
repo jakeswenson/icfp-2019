@@ -17,6 +17,22 @@ sealed class Action {
         is TeleportBack -> "T(${this.targetResetPoint.x},${this.targetResetPoint.y})"
     }
 
+    override fun toString(): String = when (this) {
+        MoveUp -> "MoveUp"
+        MoveDown -> "MoveDown"
+        MoveLeft -> "MoveLeft"
+        MoveRight -> "MoveRight"
+        DoNothing -> "DoNothing"
+        TurnClockwise -> "TurnClockwise"
+        TurnCounterClockwise -> "TurnCounterClockwise"
+        AttachFastWheels -> "AttachFastWheels"
+        StartDrill -> "StartDrill"
+        PlantTeleportResetPoint -> "PlantTeleportResetPoint"
+        CloneRobot -> "CloneRobot"
+        is AttachManipulator -> "AttachManipulator(${this.point})"
+        is TeleportBack -> "TeleportBack(${this.targetResetPoint})"
+    }
+
     object MoveUp : Action()
     object MoveDown : Action()
     object MoveLeft : Action()
