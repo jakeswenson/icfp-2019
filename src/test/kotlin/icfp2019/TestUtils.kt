@@ -73,15 +73,47 @@ private fun boardRowString(
     return (0 until size.x).map { x ->
         val node = cells[x][y]
         when {
-            node.hasTeleporterPlanted -> '*'
+            node.hasTeleporterPlanted -> '♺'
             node.point in path -> '|'
-            node.isWrapped -> 'w'
-            startingPosition == Point(x, y) -> '@'
-            node.isObstacle -> 'X'
-            node.booster != null -> 'o'
-            else -> '.'
+            node.isWrapped -> '✓'
+            startingPosition == Point(x, y) -> '⚉'
+            node.isObstacle -> '█'
+            node.booster != null -> node.booster!!.toChar() // '○'
+            else -> '·'
         }
     }.joinToString(separator = " ")
+}
+
+fun parseTestMap(map: String): Problem {
+    val mapLineSplitter = Splitter.on(CharMatcher.anyOf("\r\n")).omitEmptyStrings()
+    val lines = mapLineSplitter.splitToList(map)
+        .map { CharMatcher.whitespace().removeFrom(it) }
+        .filter { it.isBlank().not() }
+        .reversed()
+    val height = lines.size
+    val width = lines[0].length
+    if (lines.any { it.length != width }) throw IllegalArgumentException("Inconsistent map line lengths")
+    val startPoint =
+        (0 until width).map { x ->
+            (0 until height).map { y ->
+                if (lines[y][x] == '@') Point(x, y)
+                else null
+            }
+        }.flatten().find { it != null } ?: Point.origin()
+    return Problem("Test", MapSize(width, height), startPoint, TreePVector.from((0 until width).map { x ->
+        TreePVector.from((0 until height).map { y ->
+            val point = Point(x, y)
+            when (val char = lines[y][x]) {
+                'X', '█' -> Node(point, isObstacle = true)
+                'w', '✓' -> Node(point, isObstacle = false, isWrapped = true)
+                '.', ' ' -> Node(point, isObstacle = false)
+                '@', '⚉' -> Node(point, isObstacle = false)
+                '*', '♺' -> Node(point, isObstacle = false, hasTeleporterPlanted = true, isWrapped = true)
+                in Booster.parseChars -> Node(point, isObstacle = false, booster = Booster.fromChar(char))
+                else -> throw IllegalArgumentException("Unknown Char '$char'")
+            }
+        })
+    }))
 }
 
 fun boardComparisonString(
@@ -123,36 +155,4 @@ fun printBoard(p: Problem, path: Set<Point> = setOf()) {
 
 fun printBoard(state: GameState, path: Set<Point> = setOf()) {
     printBoard(state.toProblem(), path)
-}
-
-fun parseTestMap(map: String): Problem {
-    val mapLineSplitter = Splitter.on(CharMatcher.anyOf("\r\n")).omitEmptyStrings()
-    val lines = mapLineSplitter.splitToList(map)
-        .map { CharMatcher.whitespace().removeFrom(it) }
-        .filter { it.isBlank().not() }
-        .reversed()
-    val height = lines.size
-    val width = lines[0].length
-    if (lines.any { it.length != width }) throw IllegalArgumentException("Inconsistent map line lengths")
-    val startPoint =
-        (0 until width).map { x ->
-            (0 until height).map { y ->
-                if (lines[y][x] == '@') Point(x, y)
-                else null
-            }
-        }.flatten().find { it != null } ?: Point.origin()
-    return Problem("Test", MapSize(width, height), startPoint, TreePVector.from((0 until width).map { x ->
-        TreePVector.from((0 until height).map { y ->
-            val point = Point(x, y)
-            when (val char = lines[y][x]) {
-                'X' -> Node(point, isObstacle = true)
-                'w' -> Node(point, isObstacle = false, isWrapped = true)
-                '.' -> Node(point, isObstacle = false)
-                '@' -> Node(point, isObstacle = false)
-                '*' -> Node(point, isObstacle = false, hasTeleporterPlanted = true, isWrapped = true)
-                in Booster.parseChars -> Node(point, isObstacle = false, booster = Booster.fromChar(char))
-                else -> throw IllegalArgumentException("Unknown Char '$char'")
-            }
-        })
-    }))
 }

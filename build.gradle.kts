@@ -54,7 +54,8 @@ tasks.register("run", JavaExec::class) {
     classpath = sourceSets.getByName("main").runtimeClasspath
 
     main = "icfp2019.AppKt"
-    args = listOf("problems/prob-221.desc")
+    args = listOf("problems/prob-282.desc")
+    jvmArgs = listOf("-server", "-Xms2G", "-Xmx8G")
 }
 
 tasks.register("runAll", JavaExec::class) {

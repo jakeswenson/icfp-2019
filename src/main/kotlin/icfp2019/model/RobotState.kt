@@ -1,7 +1,9 @@
 package icfp2019.model
 
-import kotlin.math.PI
-import kotlin.math.roundToInt
+enum class MovementSpeed {
+    Normal,
+    Fast
+}
 
 data class RobotState(
     val robotId: RobotId,
@@ -42,22 +44,8 @@ data class RobotState(
         return remainingFastWheelTime > 1
     }
 
-    fun turnClockwise(): List<Point> {
-        return armRelativePoints
-            .map { rotatePoint(it, PI / 2) }
-    }
+    fun speed(): MovementSpeed = if (hasActiveFastWheels()) MovementSpeed.Fast else MovementSpeed.Normal
 
-    fun turnCounterClockwise(): List<Point> {
-        return armRelativePoints
-            .map { rotatePoint(it, -PI / 2) }
-    }
-
-    fun rotatePoint(point: Point, theta: Double): Point {
-        val x = point.x
-        val y = point.y
-        return Point(
-            ((Math.cos(theta) * x - Math.sin(theta) * y).roundToInt()),
-            ((Math.cos(theta) * y + Math.sin(theta) * x).roundToInt())
-        )
-    }
+    fun turnClockwise(): List<Point> = armRelativePoints.map { Point(it.y, -it.x) }
+    fun turnCounterClockwise(): List<Point> = armRelativePoints.map { Point(-it.y, it.x) }
 }

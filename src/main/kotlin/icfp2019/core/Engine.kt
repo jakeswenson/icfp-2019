@@ -4,13 +4,13 @@ import icfp2019.model.*
 
 fun applyAction(gameState: GameState, robotId: RobotId, action: Action): GameState {
     val currentPosition = gameState.robot(robotId).currentPosition
-    return with(gameState) {
+    return with(gameState.pickupBoosterIfAvailable(robotId)) {
         when (action) {
             Action.DoNothing -> this
-            Action.MoveUp -> move(robotId, Point::up)
-            Action.MoveDown -> move(robotId, Point::down)
-            Action.MoveLeft -> move(robotId, Point::left)
-            Action.MoveRight -> move(robotId, Point::right)
+            Action.Movement.MoveUp -> move(robotId, Point::up)
+            Action.Movement.MoveDown -> move(robotId, Point::down)
+            Action.Movement.MoveLeft -> move(robotId, Point::left)
+            Action.Movement.MoveRight -> move(robotId, Point::right)
 
             Action.TurnClockwise -> updateRobot(robotId) {
                 copy(orientation = orientation.turnClockwise())
@@ -61,7 +61,6 @@ private fun GameState.move(robotId: RobotId, mover: (Point) -> Point): GameState
         } else {
             state.updateRobot(robotId) { copy(currentPosition = newPosition) }
                 .wrapAffectedCells(robotId)
-                .addBoosterToState(newPosition)
         }
     }
     return movedState.updateRobot(robotId) {
@@ -78,15 +77,18 @@ private fun GameState.updateRobot(robotId: RobotId, update: RobotState.() -> Rob
 }
 
 private fun GameState.useBoosterFromState(booster: Booster): GameState {
-    return this.copy(unusedBoosters = unusedBoosters.plus(booster to unusedBoosters.getOrDefault(booster, 1) - 1))
+    val boosterCount = unusedBoosters.getOrDefault(booster, 0)
+    if (boosterCount == 0) error("Trying to use a booster that is not available")
+    return this.copy(unusedBoosters = unusedBoosters.plus(booster to boosterCount - 1))
 }
 
-private fun GameState.addBoosterToState(point: Point): GameState {
-    val node = this.nodeState(point)
+fun GameState.pickupBoosterIfAvailable(robotId: RobotId): GameState {
+    val robot = robot(robotId)
+    val node = this.nodeState(robot.currentPosition)
     val booster = node.booster ?: return this
     if (!booster.canPickup()) return this
     // pickup
-    return this.updateState(point, node.copy(booster = null)).let {
+    return this.updateState(robot.currentPosition, node.copy(booster = null)).let {
         it.copy(unusedBoosters = it.unusedBoosters.plus(booster to it.unusedBoosters.getOrDefault(booster, 0) + 1))
     }
 }
@@ -98,14 +100,14 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
 
     val withUpdatedBoardState = if (boardNode.isObstacle)
         if (robot.hasActiveDrill()) updateBoard(robotPoint, boardNode.copy(isObstacle = false))
-        else error("No active drill but moving on obstacle")
+        else error("No active drill but moving to obstacle")
     else this
 
     val updatedState = withUpdatedBoardState.updateState(robotPoint, this.nodeState(robotPoint).copy(isWrapped = true))
 
     fun computeClosestWallOnRobotPath(seq: IntProgression): List<Pair<Int, Boolean>> {
         return seq
-            .map { it to robotPoint.applyRelativePoint(Point(0, it)) }
+            .map { it to robotPoint + Point(0, it) }
             .filter { updatedState.isInBoard(it.second) }
             .map { it.first to updatedState.get(it.second).isObstacle }
             .filter { it.second }
@@ -130,7 +132,7 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
 
     fun computeClosestWallOnArmPath(seq: IntProgression): List<Pair<Int, Boolean>> {
         return seq
-            .map { it to robotPoint.applyRelativePoint(Point(1, it)) }
+            .map { it to robotPoint.plus(Point(1, it)) }
             .filter { updatedState.isInBoard(it.second) }
             .map { it.first to updatedState.get(it.second).isObstacle }
             .filter { it.second }
@@ -178,7 +180,7 @@ fun GameState.wrapAffectedCells(robotId: RobotId): GameState {
     }
 
     return robot.armRelativePoints.fold(updatedState, { state, armRelativePoint ->
-        val armWorldPoint = robotPoint.applyRelativePoint(armRelativePoint)
+        val armWorldPoint = robotPoint.plus(armRelativePoint)
         if (state.isInBoard(armWorldPoint) && isArmPointVisible(armRelativePoint) && isArmPointVisibleDueToArmPathWall(
                 armRelativePoint
             ) && state.get(armWorldPoint).isObstacle.not()

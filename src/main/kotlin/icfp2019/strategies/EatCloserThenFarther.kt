@@ -17,10 +17,10 @@ object EatCloserThenFarther : Strategy {
             data class AppliedMove(val id: Int, val gameState: GameState)
 
             val allMoves = listOf(
-                MoveOption(0, Move(Action.MoveUp, state.robot(robotId).currentPosition.up())),
-                MoveOption(1, Move(Action.MoveRight, state.robot(robotId).currentPosition.right())),
-                MoveOption(2, Move(Action.MoveDown, state.robot(robotId).currentPosition.down())),
-                MoveOption(3, Move(Action.MoveLeft, state.robot(robotId).currentPosition.left()))
+                MoveOption(0, Move(Action.Movement.MoveUp, state.robot(robotId).currentPosition.up())),
+                MoveOption(1, Move(Action.Movement.MoveRight, state.robot(robotId).currentPosition.right())),
+                MoveOption(2, Move(Action.Movement.MoveDown, state.robot(robotId).currentPosition.down())),
+                MoveOption(3, Move(Action.Movement.MoveLeft, state.robot(robotId).currentPosition.left()))
             )
 
             val unWrappedCells = state.boardState().allStates().filter { it.isWrapped.not() }.map { it.point }.toSet()

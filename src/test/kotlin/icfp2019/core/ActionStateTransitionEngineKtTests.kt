@@ -21,8 +21,8 @@ internal class ActionStateTransitionEngineKtTests {
                     """.toProblem()
         val startingPosition = problem.startingPosition
         val startingState = GameState(problem).initialize()
-        val upRightState = applyAction(startingState, RobotId.first, Action.MoveUp).let {
-            applyAction(it, RobotId.first, Action.MoveRight)
+        val upRightState = applyAction(startingState, RobotId.first, Action.Movement.MoveUp).let {
+            applyAction(it, RobotId.first, Action.Movement.MoveRight)
         }
 
         Assertions.assertEquals(
@@ -30,8 +30,8 @@ internal class ActionStateTransitionEngineKtTests {
             upRightState.robot(RobotId.first).currentPosition
         )
 
-        val backToOrigin = applyAction(upRightState, RobotId.first, Action.MoveDown).let {
-            applyAction(it, RobotId.first, Action.MoveLeft)
+        val backToOrigin = applyAction(upRightState, RobotId.first, Action.Movement.MoveDown).let {
+            applyAction(it, RobotId.first, Action.Movement.MoveLeft)
         }
 
         Assertions.assertEquals(
@@ -51,7 +51,7 @@ internal class ActionStateTransitionEngineKtTests {
             gameState.nodeState(Point.origin())
         )
 
-        listOf(Action.MoveLeft).applyTo(gameState).let {
+        listOf(Action.Movement.MoveLeft).applyTo(gameState).let {
             Assertions.assertEquals(mapOf(Booster.Drill to 1), it.unusedBoosters)
             Assertions.assertEquals(
                 BoardNodeState(Point.origin(), isWrapped = true),
@@ -71,7 +71,7 @@ internal class ActionStateTransitionEngineKtTests {
             gameState.nodeState(Point.origin())
         )
 
-        val pickupState = listOf(Action.MoveLeft).applyTo(gameState)
+        val pickupState = listOf(Action.Movement.MoveLeft).applyTo(gameState)
         pickupState.run {
             Assertions.assertEquals(1, boostersAvailable(Booster.ExtraArm))
             Assertions.assertEquals(mapOf(Booster.ExtraArm to 1), this.unusedBoosters)
@@ -103,7 +103,7 @@ internal class ActionStateTransitionEngineKtTests {
         val gameState = GameState(problem).initialize()
 
         val actions = listOf(
-            Action.MoveUp, Action.AttachFastWheels, Action.MoveRight, Action.MoveRight
+            Action.Movement.MoveUp, Action.AttachFastWheels, Action.Movement.MoveRight, Action.Movement.MoveRight
         )
         val expectedProblem = """
         .wwXX
@@ -125,7 +125,8 @@ internal class ActionStateTransitionEngineKtTests {
         val gameState = GameState(problem).initialize()
 
         val actions = listOf(
-            Action.MoveRight, Action.StartDrill, Action.MoveRight, Action.MoveRight, Action.MoveRight
+            Action.Movement.MoveRight, Action.StartDrill,
+            Action.Movement.MoveRight, Action.Movement.MoveRight, Action.Movement.MoveRight
         )
         val expectedProblem = """
         .wXww
@@ -147,11 +148,11 @@ internal class ActionStateTransitionEngineKtTests {
         val gameState = GameState(problem)
 
         val actions = listOf(
-            Action.MoveUp, Action.MoveUp, Action.MoveRight, Action.MoveRight,
-            Action.MoveRight, Action.MoveRight, Action.PlantTeleportResetPoint,
-            Action.MoveDown, Action.MoveDown, Action.MoveLeft, Action.MoveLeft,
-            Action.TeleportBack(Point(4, 2)), Action.MoveLeft, Action.MoveDown,
-            Action.MoveLeft, Action.MoveLeft, Action.MoveDown
+            Action.Movement.MoveUp, Action.Movement.MoveUp, Action.Movement.MoveRight, Action.Movement.MoveRight,
+            Action.Movement.MoveRight, Action.Movement.MoveRight, Action.PlantTeleportResetPoint,
+            Action.Movement.MoveDown, Action.Movement.MoveDown, Action.Movement.MoveLeft, Action.Movement.MoveLeft,
+            Action.TeleportBack(Point(4, 2)), Action.Movement.MoveLeft, Action.Movement.MoveDown,
+            Action.Movement.MoveLeft, Action.Movement.MoveLeft, Action.Movement.MoveDown
         )
         val expectedProblem = """
         wwww*
@@ -175,10 +176,10 @@ internal class ActionStateTransitionEngineKtTests {
         val gameState = GameState(problem)
 
         val actions = listOf(
-            Action.MoveUp, Action.MoveUp,
-            Action.MoveRight, Action.MoveDown, Action.MoveDown,
-            Action.MoveRight, Action.MoveUp, Action.MoveUp,
-            Action.MoveDown
+            Action.Movement.MoveUp, Action.Movement.MoveUp,
+            Action.Movement.MoveRight, Action.Movement.MoveDown, Action.Movement.MoveDown,
+            Action.Movement.MoveRight, Action.Movement.MoveUp, Action.Movement.MoveUp,
+            Action.Movement.MoveDown
         )
         val expectedProblem = """
         wwwXX
@@ -257,7 +258,7 @@ internal class ActionStateTransitionEngineKtTests {
     @ParameterizedTest
     @MethodSource(value = ["longArmsUpSource", "longArmsDownSource"])
     fun verifyLongArm(testCase: GameState, expected: Problem) {
-        applyAction(testCase, RobotId.first, Action.MoveRight).assertEquals(expected)
+        applyAction(testCase, RobotId.first, Action.Movement.MoveRight).assertEquals(expected)
     }
 
     @Test
@@ -280,9 +281,7 @@ internal class ActionStateTransitionEngineKtTests {
     """.toProblem()
         val gameState = makeRobotWithBalancedArms(problem)
 
-        val actions = listOf(
-            Action.MoveRight
-        )
+        val actions = listOf(Action.Movement.MoveRight)
         val expectedProblem = """
         .....
         .ww..
@@ -322,9 +321,7 @@ internal class ActionStateTransitionEngineKtTests {
     """.toProblem()
         val gameState = makeRobotWithBalancedArms(problem)
 
-        val actions = listOf(
-            Action.MoveRight
-        )
+        val actions = listOf(Action.Movement.MoveRight)
         val expectedProblem = """
         .....
         .w...
@@ -363,9 +360,7 @@ internal class ActionStateTransitionEngineKtTests {
     """.toProblem()
         val gameState = makeLongArmedRobot(problem)
 
-        val actions = listOf(
-            Action.MoveRight
-        )
+        val actions = listOf(Action.Movement.MoveRight)
         val expectedProblem = """
         .....
         .ww..
@@ -403,9 +398,7 @@ internal class ActionStateTransitionEngineKtTests {
     """.toProblem()
         val gameState = makeLongArmedRobot(problem)
 
-        val actions = listOf(
-            Action.MoveRight
-        )
+        val actions = listOf(Action.Movement.MoveRight)
         val expectedProblem = """
         .....
         .ww..
@@ -444,9 +437,7 @@ internal class ActionStateTransitionEngineKtTests {
     """.toProblem()
         val gameState = makeRobotWithBalancedArms(problem)
 
-        val actions = listOf(
-            Action.MoveRight
-        )
+        val actions = listOf(Action.Movement.MoveRight)
         val expectedProblem = """
         .....
         .ww..

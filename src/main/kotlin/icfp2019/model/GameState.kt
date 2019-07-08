@@ -1,10 +1,7 @@
 package icfp2019.model
 
 import icfp2019.core.*
-import org.pcollections.PVector
-
-typealias BoardCells = PVector<PVector<BoardCell>>
-typealias BoardNodeStates = PVector<PVector<BoardNodeState>>
+import java.util.*
 
 data class BoardCell(
     val point: Point,
@@ -24,24 +21,27 @@ data class BoardNodeState(
     val hasBooster: Boolean = booster != null
 
     fun hasBooster(booster: Booster): Boolean {
-        if (this.booster != null) {
-            return this.booster == booster
-        }
-        return false
+        return this.booster == booster
     }
 }
 
-fun BoardCells.allCells(): Sequence<BoardCell> = this.asSequence().flatten().map { it!! }
-fun BoardNodeStates.allStates(): Sequence<BoardNodeState> = this.asSequence().flatten().map { it!! }
-fun BoardNodeStates.unwrappedNodeStates(): Sequence<BoardNodeState> = allStates().filter { !it.isWrapped }
+typealias Board = GameMap<BoardCell>
+
+fun Board.allCells(): Sequence<BoardCell> = this.asSequence().flatten().map { it!! }
+fun Board.nonObstacles(): Sequence<BoardCell> = allCells().filter { !it.isObstacle }
+
+typealias BoardStates = GameMap<BoardNodeState>
+
+fun BoardStates.allStates(): Sequence<BoardNodeState> = this.asSequence().flatten().map { it!! }
+fun BoardStates.onlyUnwrapped(): Sequence<BoardNodeState> = allStates().filter { !it.isWrapped }
 
 data class GameState private constructor(
-    private val board: BoardCells,
-    private val boardState: BoardNodeStates,
+    private val board: Board,
+    private val boardState: BoardStates,
     val mapSize: MapSize,
     val startingPoint: Point,
     private val robotStates: Map<RobotId, RobotState> = initialRobotMap(startingPoint),
-    val teleportDestination: List<Point> = emptyList(),
+    val teleportDestination: Set<Point> = emptySet(),
     val unusedBoosters: Map<Booster, Int> = emptyMap()
 ) {
 
@@ -55,40 +55,39 @@ data class GameState private constructor(
     companion object {
         private fun initialRobotMap(point: Point) = mapOf(RobotId.first to RobotState(RobotId.first, point))
 
-        private fun initBoardNodes(mapCells: MapCells): BoardCells {
-            return mapCells.rebuild { BoardCell(it) }
+        private fun initBoardNodes(mapCells: MapCells): Board {
+            return mapCells.mapNodes { BoardCell(it) }
         }
 
-        private fun initBoardNodeState(problem: Problem): BoardNodeStates {
-            return problem.map.rebuild {
+        private fun initBoardNodeState(problem: Problem): BoardStates {
+            return problem.map.mapNodes {
                 BoardNodeState(it)
             }
         }
     }
 
     fun initialize(): GameState {
-        return this.wrapAffectedCells(RobotId.first)
+        return wrapAffectedCells(RobotId.first)
     }
 
-    fun board(): BoardCells = board
-    fun boardState(): BoardNodeStates = boardState
+    fun board(): Board = board
+    fun boardState(): BoardStates = boardState
+
+    fun get(point: Point): BoardCell = when {
+        isInBoard(point) -> board[point]
+        else -> error("Access out of game board: $point")
+    }
 
     fun nodeState(point: Point): BoardNodeState = when {
-        isInBoard(point) -> boardState.get(point)
+        isInBoard(point) -> boardState[point]
         else -> error("$point Not in board")
     }
 
-    val allRobotIds: Set<RobotId> = robotStates.keys
-
-    fun get(point: Point): BoardCell {
-        if (!isInBoard(point)) {
-            throw ArrayIndexOutOfBoundsException("Access out of game board")
-        }
-        return board[point.x][point.y]
-    }
+    val allRobotIds: SortedSet<RobotId> get() = robotStates.keys.toSortedSet(compareBy { it.id })
+    val allRobots: List<RobotState> get() = robotStates.values.toList()
 
     fun isGameComplete(): Boolean {
-        return board().allCells().all { it.isObstacle || nodeState(it.point).isWrapped }
+        return board().nonObstacles().all { nodeState(it.point).isWrapped }
     }
 
     fun isInBoard(point: Point): Boolean {
@@ -103,8 +102,7 @@ data class GameState private constructor(
         if (!isInBoard(point)) {
             throw ArrayIndexOutOfBoundsException("Access out of game board")
         }
-        val newCells = board.update(point) { value }
-        return copy(board = newCells)
+        return copy(board = board.update(point) { value })
     }
 
     fun updateState(point: Point, value: BoardNodeState): GameState {
@@ -125,7 +123,7 @@ data class GameState private constructor(
     }
 
     fun withRobotState(robotId: RobotId, robotState: RobotState): GameState {
-        return copy(robotStates = robotStates.plus(robotId to robotState))
+        return copy(robotStates = robotStates + (robotId to robotState))
     }
 
     fun robot(robotId: RobotId): RobotState {

@@ -18,7 +18,7 @@ class SpeedBoosterStrategyTests {
         val gs = GameState(problem)
         val strategy = SpeedBoosterStrategy.compute(gs)
         val r = strategy(RobotId.first, gs)
-        Assertions.assertEquals(Action.MoveRight, r)
+        Assertions.assertEquals(Action.Movement.MoveRight, r)
     }
 
     @Test
@@ -31,6 +31,6 @@ class SpeedBoosterStrategyTests {
         val gs = GameState(problem)
         val strategy = SpeedBoosterStrategy.compute(gs)
         val r = strategy(RobotId.first, gs)
-        Assertions.assertTrue(r == Action.MoveUp || r == Action.MoveLeft)
+        Assertions.assertTrue(r == Action.Movement.MoveUp || r == Action.Movement.MoveLeft)
     }
 }

@@ -9,12 +9,12 @@ import org.junit.jupiter.api.Test
 class OutputTests {
     fun getListOfAction(): List<Action> {
         return listOf(
-            Action.MoveDown,
-            Action.MoveDown,
-            Action.MoveLeft,
-            Action.MoveUp,
-            Action.MoveUp,
-            Action.MoveRight)
+            Action.Movement.MoveDown,
+            Action.Movement.MoveDown,
+            Action.Movement.MoveLeft,
+            Action.Movement.MoveUp,
+            Action.Movement.MoveUp,
+            Action.Movement.MoveRight)
     }
 
     @Test

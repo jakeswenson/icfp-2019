@@ -1,5 +1,6 @@
 package icfp2019.analyzers
 
+import icfp2019.GraphEdge
 import icfp2019.core.Analyzer
 import icfp2019.core.DistanceEstimate
 import icfp2019.model.*
@@ -7,15 +8,14 @@ import org.jgrapht.Graph
 import org.jgrapht.alg.connectivity.ConnectivityInspector
 import org.jgrapht.alg.spanning.PrimMinimumSpanningTree
 import org.jgrapht.graph.AsSubgraph
-import org.jgrapht.graph.DefaultEdge
 
 data class ConservativeDistance(val estimate: DistanceEstimate, val pathNodes: Set<Point>)
 object ConservativeDistanceAnalyzer : Analyzer<(position: Point) -> ConservativeDistance> {
     override fun analyze(initialState: GameState): (robotId: RobotId, state: GameState) -> (position: Point) -> ConservativeDistance {
-        val graphAnalyzer = BoardCellsGraphAnalyzer.analyze(initialState)
+        val graphAnalyzer = GraphAnalyzer.analyze(initialState)
         val shortestPathAnalyzer = ShortestPathUsingDijkstra.analyze(initialState)
         return { id, state ->
-            val graph: Graph<BoardCell, DefaultEdge> = graphAnalyzer(id, state)
+            val graph: Graph<BoardCell, GraphEdge> = graphAnalyzer(id, state)
             val shortestPathAlgorithm = shortestPathAnalyzer(id, state)
             val unwrappedNodes = AsSubgraph(
                 graph,

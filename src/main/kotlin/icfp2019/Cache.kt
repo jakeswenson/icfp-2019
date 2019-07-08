@@ -1,35 +1,40 @@
 package icfp2019
 
 import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import icfp2019.model.BoardNodeStates
-import icfp2019.model.BoardCells
+import icfp2019.model.Board
+import icfp2019.model.BoardStates
 import icfp2019.model.GameState
+import icfp2019.model.MovementSpeed
 
-class Cache<T, R>(filler: (T) -> R) {
+class Cache<T, Key, R> private constructor(private val filler: (T) -> R, private val keyGetter: (T) -> Key) {
     companion object {
-        fun <R> forGameState(filler: (GameState) -> R): Cache<GameState, R> {
-            return Cache(filler)
+        fun <R> forGameState(filler: (GameState) -> R): Cache<GameState, GameState, R> {
+            return Cache(filler) { it }
         }
 
-        fun <R> forBoard(filler: (BoardCells) -> R): Cache<BoardCells, R> {
-            return Cache(filler)
+        fun <Key, R> forGameState(keyGetter: (GameState) -> Key, filler: (GameState) -> R): Cache<GameState, Key, R> {
+            return Cache(filler, keyGetter)
         }
 
-        fun <R> forBoardState(filler: (BoardNodeStates) -> R): Cache<BoardNodeStates, R> {
-            return Cache(filler)
+        fun <R> forBoard(filler: (Board) -> R): Cache<Board, Board, R> {
+            return Cache(filler) { it }
         }
+
+        fun <R> forBoardState(filler: (BoardStates) -> R): Cache<BoardStates, BoardStates, R> {
+            return Cache(filler) { it }
+        }
+
+        fun <R> forBoardAndSpeed(filler: (Pair<Board, MovementSpeed>) -> R) =
+            Cache(filler) { it }
     }
 
     private val storage = CacheBuilder.newBuilder()
         .maximumSize(50)
-        .build(object : CacheLoader<T, R>() {
-            override fun load(key: T): R {
-                return filler(key)
-            }
-        })
+        .build<Key, R>()
 
     operator fun invoke(key: T): R {
-        return storage.getUnchecked(key)
+        return storage.get(keyGetter(key)) {
+            filler(key)
+        }
     }
 }

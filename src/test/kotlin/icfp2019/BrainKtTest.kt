@@ -23,14 +23,16 @@ internal class BrainKtTest {
     }
 
     @Test
-    fun brainStep() {
+    fun brainStepTest() {
         val problem = parseTestMap(init)
         val solution = parseTestMap(fini)
         printBoard(problem)
-        val strategy = TestStrategy(Action.MoveDown, Action.MoveRight)
-        var state = GameState(problem).initialize()
+        val strategy = TestStrategy(Action.Movement.MoveDown, Action.Movement.MoveRight)
+        val initialState = GameState(problem).initialize()
+        var state = initialState
         for (i in 0..1) {
             val (result, actions) = brainStep(
+                initialState,
                 state,
                 strategy,
                 1

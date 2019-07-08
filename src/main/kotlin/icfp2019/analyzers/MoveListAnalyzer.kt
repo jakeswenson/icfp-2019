@@ -1,24 +1,29 @@
 package icfp2019.analyzers
 
-import icfp2019.model.*
 import icfp2019.core.Analyzer
+import icfp2019.model.Action
+import icfp2019.model.GameState
+import icfp2019.model.Point
+import icfp2019.model.RobotId
 
 object MoveListAnalyzer : Analyzer<List<Action>> {
     override fun analyze(initialState: GameState): (robotId: RobotId, state: GameState) -> List<Action> {
+        val moveAnalyzer = MoveAnalyzer.analyze(initialState)
         return { robotId, gameState ->
+            val canMove = moveAnalyzer(robotId, gameState)
             val moves = mutableListOf<Action>()
             fun checkCanDoAction(action: Action) {
-                if (MoveAnalyzer.analyze(initialState)(robotId, gameState)(robotId, action)) {
+                if (canMove(action)) {
                     moves.add(action)
                 }
             }
             checkCanDoAction(Action.DoNothing)
             checkCanDoAction(Action.TurnClockwise)
             checkCanDoAction(Action.TurnCounterClockwise)
-            checkCanDoAction(Action.MoveLeft)
-            checkCanDoAction(Action.MoveRight)
-            checkCanDoAction(Action.MoveDown)
-            checkCanDoAction(Action.MoveUp)
+            checkCanDoAction(Action.Movement.MoveLeft)
+            checkCanDoAction(Action.Movement.MoveRight)
+            checkCanDoAction(Action.Movement.MoveDown)
+            checkCanDoAction(Action.Movement.MoveUp)
             for (location: Point in gameState.teleportDestination) {
                 checkCanDoAction(Action.TeleportBack(location))
             }

@@ -45,4 +45,51 @@ class Tests {
         println(result.second)
         printBoard(result.first, result.second.map { it.second }.toSet())
     }
+
+    @Test
+    fun run221() {
+//        val map = """
+// X X X X X X X . X . X . . . . . . . . . X . . . . . . . . X . . .
+// X X X X X X X . X . . . . . . . . . X X X X X X X . . . X X X . .
+// X X X X X X X . . . . . . . . . . . X . X . X . . . . . . . . . X
+// X X X X X X X X X . . . . c . . . . X . . . X X X . . . . X X X X
+// X X X X X X X X X X . . . . . . . . . . . . . . . . . . . . . . X
+// X X X X . . X X X . . . . . . . . . . . X . . . . . x . . . . X X
+// X X . . . . . X X . . . X . X . . . X . X X . . . . . . . . . . .
+// X . . . . . . . . . . X X X X . X . X X X . . . . . . . . X . X X
+// . . . . . . . . . . . . X . X X X X X . . . . . . . . . X X X X X
+// . . . . . . . . . . . . . . . . X . . . . . . . . . . . . X . X X
+// . . . . . . . . . . . . . . X X X . b . . . . . . . . X X X . X X
+// @ . . . X X . . . . . . . . . X . . . . . . . X X X X X . X . . .
+// X . . . X . . X . . . . . . X X X X X . . . . . . . . X . . . X .
+// X X . . X . . X . . . . . . . X . X . . . . . . . . . . . . X X X
+// X X X . . . . X . . . . . . . . . . . . . . . . . . . . . . . . .
+// X X X X . . . X . . . . . . . . . . . . . . . . . . . . . . . . .
+// X X X X X X . . . . . . . . . . . . . . . . . . . . . . . . . . .
+// X X X X X X X . . . X X . . . . . . . . . X X . . . . . . . . . .
+// X X X X X X X X . X X . . . . . . . . X X X X X . . . . . . c . .
+// X X X X X X X X . . . . . . . . . X X X X X X X X X X . . . . . .
+// X X X X X X X X X . . . . . . . X X X X X X X X X X X X . . . . .
+// X X X X X X X X X . . . . . X X X X X X X X X X X X X X X . . X X
+// X X X X X X X X X X . . . X X X X X X X X X X X X X X X X X X X X
+// X X X X X X X X X X X . X X X X X X X X X X X X X X X X X X X X X
+//        """.toProblem()
+
+//        var map = """
+//            @.....
+//            c....x
+//            .....c
+//            ......
+//            ......
+//            ....█.
+//            ......
+//            ......
+//        """.toProblem()
+        val map = parseDesc(loadProblem(221), "221")
+        printBoard(map)
+
+        brain(map, BFSStrategy, 2).last().let { solution ->
+            println(solution.actions)
+        }
+    }
 }

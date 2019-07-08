@@ -3,25 +3,29 @@ package icfp2019
 import icfp2019.core.DistanceEstimate
 import icfp2019.core.Strategy
 import icfp2019.core.applyAction
+import icfp2019.core.pickupBoosterIfAvailable
 import icfp2019.model.Action
 import icfp2019.model.GameState
 import icfp2019.model.Problem
 import icfp2019.model.RobotId
 
+data class StrategyResult(val nextState: GameState, val nextAction: Action)
+
 fun strategySequence(
-    initialGameState: GameState,
-    strategy: Strategy,
     robotId: RobotId,
+    strategy: (robotId: RobotId, state: GameState) -> Action,
+    currentState: GameState,
     initialAction: Action = Action.DoNothing
-): Sequence<Pair<GameState, Action>> {
+): Sequence<StrategyResult> {
     return generateSequence(
-        seed = initialGameState to initialAction,
+        seed = StrategyResult(currentState, initialAction),
         nextFunction = { (gameState, _) ->
             if (gameState.isGameComplete()) null
             else {
-                val nextAction = strategy.compute(gameState)(robotId, gameState)
-                val nextState = applyAction(gameState, robotId, nextAction)
-                nextState to nextAction
+                val gameStateWithPickedupItems = gameState.pickupBoosterIfAvailable(robotId)
+                val nextAction = strategy(robotId, gameStateWithPickedupItems)
+                val nextState = applyAction(gameStateWithPickedupItems, robotId, nextAction)
+                StrategyResult(nextState, nextAction)
             }
         }
     ).drop(1) // skip the initial state
@@ -29,19 +33,21 @@ fun strategySequence(
 
 data class BrainScore(
     val robotId: RobotId,
-    val gameState: GameState,
-    val action: Action,
+    val strategyResult: StrategyResult,
     val distanceEstimate: DistanceEstimate,
-    val strategy: Strategy
+    val strategy: Strategy,
+    val simulationFinalState: GameState
 )
 
-fun Sequence<Pair<GameState, Action>>.score(
+fun Sequence<StrategyResult>.score(
     robotId: RobotId,
     strategy: Strategy
 ): BrainScore {
     // grab the first and last game state in this simulation path
-    val (initial) = map { it to it.first }
-        .reduce { (initial, _), (_, final) -> initial to final }
+    data class ReduceState(val strategyResult: StrategyResult, val finalState: GameState)
+
+    val result =
+        map { ReduceState(it, it.nextState) }.reduce { (initial, _), (_, final) -> ReduceState(initial, final) }
 
     // return the initial game state, if this path is the winner
     // we can use this to avoid duplicate action evaluation
@@ -50,15 +56,16 @@ fun Sequence<Pair<GameState, Action>>.score(
 
     return BrainScore(
         robotId,
-        initial.first,
-        initial.second,
+        result.strategyResult,
         DistanceEstimate(0),
-        strategy
+        strategy,
+        result.finalState
     )
 }
 
 fun brainStep(
     initialGameState: GameState,
+    currentState: GameState,
     strategy: Strategy,
     maximumSteps: Int
 ): Pair<GameState, Map<RobotId, Action>> {
@@ -69,48 +76,59 @@ fun brainStep(
     // robot/state pair and resuming until the stack of robots is empty
 
     // the list of robots can change over time steps, get a fresh copy each iteration
-    var gameState = initialGameState
+    var gameState = currentState
     val actions = mutableMapOf<RobotId, Action>()
-    val workingSet = gameState.allRobotIds.toMutableSet()
+    var workingSet = currentState.allRobotIds
     while (!gameState.isGameComplete() && workingSet.isNotEmpty()) {
         // pick the minimum across all robot/strategy pairs
-        val winner = workingSet
-            .map { robotId ->
-                strategySequence(gameState, strategy, robotId)
-                    .take(maximumSteps)
-                    .score(robotId, strategy)
-            }
 
-        val winner0 = winner.minBy { it.distanceEstimate }!!
+        // work must be done in order
+        val robotId = workingSet.first()!!
+
+        val winner = strategySequence(robotId, strategy.compute(initialGameState), gameState)
+            .take(if (workingSet.count() == 1) 1 else maximumSteps)
+            .score(robotId, strategy)
 
         // we have a winner, remove it from the working set for this time step
-        workingSet.remove(winner0.robotId)
+        workingSet = workingSet.tailSet(robotId.nextId())
+
         // record the winning action and update the running state
-        actions[winner0.robotId] = winner0.action
-        gameState = winner0.gameState
+        actions[winner.robotId] = winner.strategyResult.nextAction
+        val nextGameState = winner.strategyResult.nextState
+        gameState = nextGameState.copy(boardState = winner.simulationFinalState.boardState())
     }
 
-    return gameState to actions
+    return actions.entries.fold(currentState) { state, entry ->
+        applyAction(state, entry.key, entry.value)
+    } to actions
 }
+
+data class BrainState(
+    val gameState: GameState,
+    val robotActions: Map<RobotId, List<Action>> = emptyMap(),
+    val turn: Int = 0
+)
 
 fun brain(
     problem: Problem,
     strategy: Strategy,
     maximumSteps: Int
-): Sequence<Solution> =
-    generateSequence(
-        seed = GameState(problem).initialize() to mapOf<RobotId, List<Action>>(),
-        nextFunction = { (gameState, actions) ->
-            if (gameState.isGameComplete()) {
+): Sequence<Solution> {
+    val initalState = GameState(problem).initialize()
+    return generateSequence(
+        seed = BrainState(initalState),
+        nextFunction = { brainState ->
+            if (brainState.gameState.isGameComplete()) {
                 null
             } else {
-                val (newState, newActions) = brainStep(gameState, strategy, maximumSteps)
-                val mergedActions = actions.toMutableMap()
+                val (newState, newActions) = brainStep(initalState, brainState.gameState, strategy, maximumSteps)
+                val mergedActions = brainState.robotActions.toMutableMap()
                 newActions.forEach { (robotId, action) ->
                     mergedActions.merge(robotId, listOf(action)) { left, right -> left.plus(right) }
                 }
 
-                newState to mergedActions.toMap()
+                BrainState(newState, mergedActions.toMap(), turn = brainState.turn + 1)
             }
         }
-    ).map { (_, actions) -> Solution(problem, actions) }
+    ).drop(1).map { (_, actions) -> Solution(problem, actions) }
+}

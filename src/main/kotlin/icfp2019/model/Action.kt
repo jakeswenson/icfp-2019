@@ -2,10 +2,10 @@ package icfp2019.model
 
 sealed class Action {
     fun toSolutionString(): String = when (this) {
-        MoveUp -> "W"
-        MoveDown -> "S"
-        MoveLeft -> "A"
-        MoveRight -> "D"
+        Movement.MoveUp -> "W"
+        Movement.MoveDown -> "S"
+        Movement.MoveLeft -> "A"
+        Movement.MoveRight -> "D"
         DoNothing -> "Z"
         TurnClockwise -> "E"
         TurnCounterClockwise -> "Q"
@@ -18,10 +18,10 @@ sealed class Action {
     }
 
     override fun toString(): String = when (this) {
-        MoveUp -> "MoveUp"
-        MoveDown -> "MoveDown"
-        MoveLeft -> "MoveLeft"
-        MoveRight -> "MoveRight"
+        Movement.MoveUp -> "MoveUp"
+        Movement.MoveDown -> "MoveDown"
+        Movement.MoveLeft -> "MoveLeft"
+        Movement.MoveRight -> "MoveRight"
         DoNothing -> "DoNothing"
         TurnClockwise -> "TurnClockwise"
         TurnCounterClockwise -> "TurnCounterClockwise"
@@ -33,10 +33,13 @@ sealed class Action {
         is TeleportBack -> "TeleportBack(${this.targetResetPoint})"
     }
 
-    object MoveUp : Action()
-    object MoveDown : Action()
-    object MoveLeft : Action()
-    object MoveRight : Action()
+    sealed class Movement : Action() {
+        object MoveUp : Movement()
+        object MoveDown : Movement()
+        object MoveLeft : Movement()
+        object MoveRight : Movement()
+    }
+
     object DoNothing : Action()
     object TurnClockwise : Action()
     object TurnCounterClockwise : Action()

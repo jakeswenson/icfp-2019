@@ -1,7 +1,7 @@
 package icfp2019.analyzers
 
 import icfp2019.core.Analyzer
-import icfp2019.model.BoardCells
+import icfp2019.model.Board
 import icfp2019.model.GameState
 import icfp2019.model.RobotId
 
@@ -18,7 +18,7 @@ object DistanceToWalls : Analyzer<Distance> {
 
     val obstacleIdentifier: Distance = Distance(-1)
 
-    private fun applyDistanceAlgorithm(map: BoardCells): List<List<Distance>> {
+    private fun applyDistanceAlgorithm(map: Board): List<List<Distance>> {
         val maxX = map.size
         val maxY = map[0].size
         val ret = map.mapIndexed { x, subArray ->

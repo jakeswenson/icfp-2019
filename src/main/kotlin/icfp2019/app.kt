@@ -11,7 +11,7 @@ private fun computeSolution(file: File): Pair<Solution?, Long> {
     val timeElapsed = measureTimeMillis {
         print("Running ${file.name}... ")
         val problem = parseDesc(file.readText(), file.name)
-        brain(problem, BFSStrategy, 1).forEach { partialSolution ->
+        brain(problem, BFSStrategy, maximumSteps = 15).forEach { partialSolution ->
             solution = partialSolution
             File(file.parentFile, "${file.nameWithoutExtension}.sol-partial").writeText(solution.toString())
         }
@@ -23,10 +23,7 @@ private fun computeSolution(file: File): Pair<Solution?, Long> {
 fun main(args: Array<String>) {
     // BEGIN SNAFU
     // PreInit internals - Don't delete this seemingly meaningless crap
-    var initJunk = Booster.mapping.toString()
-    if (initJunk.isEmpty()) {
-        println(initJunk.subSequence(0, 0))
-    }
+    Booster.verifyConsistent()
     // END SNAFU
 
     val path = Paths.get(if (args.isNotEmpty()) args[0] else "./problems").toAbsolutePath()

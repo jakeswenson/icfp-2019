@@ -14,7 +14,7 @@ class EatCloserThenFatherTests {
         val gameState = GameState(problem3).withRobotPosition(RobotId.first, Point(20, 0))
         val strategy = EatCloserThenFarther.compute(gameState)
         val action = strategy(RobotId.first, gameState)
-        Assertions.assertEquals(Action.MoveRight, action)
+        Assertions.assertEquals(Action.Movement.MoveRight, action)
     }
 
     @Test
@@ -27,7 +27,7 @@ class EatCloserThenFatherTests {
         val gs = GameState(problem)
         val s = EatCloserThenFarther.compute(gs)
         val m1 = s(RobotId.first, gs)
-        Assertions.assertEquals(Action.MoveUp, m1)
+        Assertions.assertEquals(Action.Movement.MoveUp, m1)
     }
 
     @Test
@@ -40,7 +40,7 @@ class EatCloserThenFatherTests {
         val gs = GameState(problem)
         val s = EatCloserThenFarther.compute(gs)
         val m1 = s(RobotId.first, gs)
-        Assertions.assertEquals(Action.MoveRight, m1)
+        Assertions.assertEquals(Action.Movement.MoveRight, m1)
     }
 
     @Test
@@ -53,6 +53,6 @@ class EatCloserThenFatherTests {
         val gs = GameState(problem)
         val s = EatCloserThenFarther.compute(gs)
         val m1 = s(RobotId.first, gs)
-        Assertions.assertEquals(Action.MoveRight, m1)
+        Assertions.assertEquals(Action.Movement.MoveRight, m1)
     }
 }

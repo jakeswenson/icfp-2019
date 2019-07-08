@@ -15,7 +15,7 @@ internal class KMetisTest {
         val problemInput = loadProblem(3)
         val desc = parseDesc(problemInput, "Test")
         val gameState = GameState(desc)
-        val boardCells = BoardCellsGraphAnalyzer.analyze(gameState)(RobotId.first, gameState)
+        val boardCells = GraphAnalyzer.analyze(gameState)(RobotId.first, gameState)
         val split = kMetis(boardCells, setOf(), 4)
         split.forEachIndexed { idx, x ->
             println("$idx: $x")
